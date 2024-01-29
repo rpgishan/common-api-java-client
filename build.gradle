@@ -1,0 +1,100 @@
+plugins {
+    id 'java'
+    id 'maven-publish'
+    id 'org.openapi.generator' version '7.1.0'
+}
+
+group = 'com.sundance.services'
+version = '0.0.1-SNAPSHOT'
+String appPackage = "${group}.commonapiclient"
+
+java {
+    sourceCompatibility = '17'
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+ext {
+    spring_web_version = "6.1.0"
+    jackson_version = "2.14.2"
+    jackson_databind_version = "2.15.1"
+    jackson_databind_nullable_version = "0.2.6"
+    jakarta_annotation_version = "2.1.1"
+    jakarta_validation_version = "3.0.2"
+    jodatime_version = "2.9.9"
+    junit_version = "4.13.2"
+    hibernate_validator_version = "8.0.1.Final"
+}
+
+dependencies {
+    implementation "org.springframework:spring-web:$spring_web_version"
+    implementation "org.springframework:spring-context:$spring_web_version"
+    implementation "com.google.code.findbugs:jsr305:3.0.2"
+    implementation "com.fasterxml.jackson.core:jackson-core:$jackson_version"
+    implementation "com.fasterxml.jackson.core:jackson-annotations:$jackson_version"
+    implementation "com.fasterxml.jackson.core:jackson-databind:$jackson_databind_version"
+    implementation "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:$jackson_version"
+    implementation "org.openapitools:jackson-databind-nullable:$jackson_databind_nullable_version"
+    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jackson_version"
+    implementation "jakarta.annotation:jakarta.annotation-api:$jakarta_annotation_version"
+    implementation "jakarta.validation:jakarta.validation-api:$jakarta_validation_version"
+    implementation "org.hibernate.validator:hibernate-validator:$hibernate_validator_version"
+
+
+    testImplementation "junit:junit:$junit_version"
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+}
+
+openApiGenerate {
+    generatorName.set("java")
+    inputSpec.set("$rootDir/src/main/resources/api-spec/common-api-spec/v1/common-api.yaml")
+    outputDir.set("$buildDir/generated")
+    apiPackage.set("${appPackage}.controller")
+    invokerPackage.set("${appPackage}.service")
+    modelPackage.set("${appPackage}.dto")
+    groupId.set("$group")
+    id.set("common-api-client")
+    version.set("$version")
+    configOptions.set([
+            title                : "Common API Client",
+            library              : "resttemplate",
+            generateClientAsBean : "true",
+            dateLibrary          : "java8",
+            performBeanValidation: "true",
+            useBeanValidation    : "true",
+            useJakartaEe         : "true",
+            snapshotVersion      : "true",
+    ])
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs(files("${openApiGenerate.outputDir.get()}/src/main"))
+        }
+    }
+}
+
+tasks.compileJava {
+    dependsOn(tasks.openApiGenerate)
+}
+
+test {
+    useJUnitPlatform()
+}
