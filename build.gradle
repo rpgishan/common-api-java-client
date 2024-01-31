@@ -13,9 +13,7 @@ java {
 }
 
 configurations {
-    compileOnly {
-        extendsFrom annotationProcessor
-    }
+    apisource
 }
 
 repositories {
@@ -49,6 +47,7 @@ dependencies {
     implementation "jakarta.validation:jakarta.validation-api:$jakarta_validation_version"
     implementation "org.hibernate.validator:hibernate-validator:$hibernate_validator_version"
 
+    apisource group: 'com.sundance.apispecs', name: 'common-api-spec', version: '0.0.1-SNAPSHOT', classifier: 'openapi', ext: 'yaml'
 
     testImplementation "junit:junit:$junit_version"
 }
@@ -63,7 +62,7 @@ publishing {
 
 openApiGenerate {
     generatorName.set("java")
-    inputSpec.set("$rootDir/src/main/resources/api-spec/common-api-spec/v1/common-api.yaml")
+    inputSpec.set("$buildDir/generated/api-specs/common-api-spec.yaml")
     outputDir.set("$buildDir/generated")
     apiPackage.set("${appPackage}.controller")
     invokerPackage.set("${appPackage}.service")
@@ -89,6 +88,21 @@ sourceSets {
             srcDirs(files("${openApiGenerate.outputDir.get()}/src/main"))
         }
     }
+}
+
+tasks.register('extractApi', Sync) {
+    dependsOn configurations.apisource
+    from {
+        configurations.apisource
+    }
+    into "$buildDir/generated/api-specs/"
+    rename { String fileName ->
+        fileName.replaceAll("(?!\\.)([-.]?)(\\d+(\\.\\d+)+)(?:[-.][A-Z]+)?(?![\\d.])(?:[-.][a-z]+)?", "")
+    }
+}
+
+tasks.openApiGenerate {
+    dependsOn(tasks.extractApi)
 }
 
 tasks.compileJava {
