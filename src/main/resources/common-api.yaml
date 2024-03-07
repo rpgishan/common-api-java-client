@@ -1,0 +1,55 @@
+openapi: 3.0.1
+info:
+  contact:
+    email: rpgishan@gmail.com
+    name: Gishan Pemathilake
+    url: https://github.com/rpgishan
+  description: Common API of Sundance Common Service
+  title: Common API
+  version: 0.0.1
+servers:
+- description: Server url
+  url: http://localhost:8080
+paths:
+  /version:
+    get:
+      operationId: version
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VersionDTO'
+          description: OK
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDTO'
+          description: unexpected error
+      tags:
+      - common-controller
+      x-accepts: application/json
+      x-tags:
+      - tag: common-controller
+components:
+  schemas:
+    VersionDTO:
+      example:
+        version: version
+      properties:
+        version:
+          type: string
+      required:
+      - version
+    ErrorDTO:
+      properties:
+        code:
+          format: int32
+          type: integer
+        message:
+          type: string
+      required:
+      - code
+      - message
+      type: object
